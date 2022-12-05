@@ -4,6 +4,7 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 !**/src/test/**/pruebas
+backend/src/test/java/com/crisalis/bootcamp/pruebas/
 
 
 ### STS ###
@@ -16,6 +17,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
+.idea/
 .idea
 *.iws
 *.iml

@@ -1,27 +1,33 @@
 package com.crisalis.bootcamp.entities;
 
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
+import java.util.Collection;
+import java.util.HashSet;
+
+import static org.aspectj.weaver.tools.cache.SimpleCacheFactory.enabled;
 
 @Entity
 @Table(name = "usuarios")
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String nombre;
-    private String apellido;
-    private String email;
+    @NotBlank(message = "username is required")
+    private String username;
+    @NotBlank(message = "password is required")
     private String password;
 
     public User() {
     }
 
-    public User(Long id, String nombre, String apellido, String email, String password) {
+    public User(Long id, String username, String password) {
         this.id = id;
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.email = email;
+        this.username = username;
         this.password = password;
     }
 
@@ -33,32 +39,43 @@ public class User {
         this.id = id;
     }
 
-    public String getNombre() {
-        return nombre;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
 
-    public String getApellido() {
-        return apellido;
-    }
-
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return new HashSet<GrantedAuthority>();
     }
 
     public String getPassword() {
         return password;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return enabled;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return enabled;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return enabled;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
     }
 
     public void setPassword(String password) {
@@ -69,9 +86,7 @@ public class User {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", nombre='" + nombre + '\'' +
-                ", apellido='" + apellido + '\'' +
-                ", email='" + email + '\'' +
+                ", nombre='" + username + '\'' +
                 ", password='" + password + '\'' +
                 '}';
     }
