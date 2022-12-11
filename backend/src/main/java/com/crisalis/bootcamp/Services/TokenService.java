@@ -32,7 +32,7 @@ public class TokenService {
 //                .expiresAt(now.plus(10, ChronoUnit.SECONDS))
                 .expiresAt(now.plus(1, ChronoUnit.HOURS))
                 .subject(authentication.getName())
-                .claim("scope", scope)
+                .claim("role", scope)
                 .build();
         return this.encoder.encode(JwtEncoderParameters.from(claims)).getTokenValue();
     }

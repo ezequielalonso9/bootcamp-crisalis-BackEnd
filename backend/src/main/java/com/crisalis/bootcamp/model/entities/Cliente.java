@@ -18,13 +18,16 @@ public class Cliente {
     @JoinColumn(name = "empresa_id", referencedColumnName = "id")
     private Empresa empresa;
 
+    private Boolean estado;
+
     public Cliente() {
     }
 
-    public Cliente(Long id, Persona persona, Empresa empresa) {
+    public Cliente(Long id, Persona persona, Empresa empresa, Boolean estado) {
         this.id = id;
         this.persona = persona;
         this.empresa = empresa;
+        this.estado = estado;
     }
 
     public Long getId() {
@@ -34,13 +37,13 @@ public class Cliente {
     public void setId(Long id) {
         this.id = id;
     }
+
     public Persona getPersona() {
         return persona;
     }
     public void setPersona(Persona persona) {
         this.persona = persona;
     }
-
     public Empresa getEmpresa() {
         return empresa;
     }
@@ -49,10 +52,19 @@ public class Cliente {
         this.empresa = empresa;
     }
 
+    public Boolean getEstado() {
+        return estado;
+    }
+
+    public void setEstado(Boolean estado) {
+        this.estado = estado;
+    }
+
     @Override
     public String toString() {
         return "Cliente{" +
                 "id=" + id +
+                "estado=" + estado +
                 '}';
     }
 }

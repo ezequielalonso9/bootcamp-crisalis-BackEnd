@@ -3,7 +3,8 @@ package com.crisalis.bootcamp.controllers;
 
 import com.crisalis.bootcamp.Services.TokenService;
 import com.crisalis.bootcamp.Services.UserService;
-import com.crisalis.bootcamp.entities.User;
+import com.crisalis.bootcamp.model.dto.UserDto;
+import com.crisalis.bootcamp.model.entities.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.validation.Valid;
+import javax.annotation.security.RolesAllowed;
 
 @Controller
 public class AuthController {
@@ -38,8 +39,9 @@ public class AuthController {
         return new ResponseEntity<>(token, HttpStatus.ACCEPTED);
     }
 
+    @RolesAllowed(value = "ROLE_ADMIN")
     @PostMapping("/auth/SingIn")
-    public ResponseEntity<Object> SingIn(@Valid @RequestBody User user){
+    public ResponseEntity<Object> SingIn(@RequestBody UserDto user){
         User userCreated = userService.createUser(user);
         return new ResponseEntity<>(userCreated, HttpStatus.CREATED);
     }

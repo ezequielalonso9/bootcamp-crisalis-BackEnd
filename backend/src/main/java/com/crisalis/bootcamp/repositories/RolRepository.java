@@ -1,13 +1,12 @@
 package com.crisalis.bootcamp.repositories;
 
-import com.crisalis.bootcamp.model.entities.User;
+import com.crisalis.bootcamp.model.entities.Rol;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-
-    Optional<User> findByUsername(String username);
+public interface RolRepository extends JpaRepository<Rol,Long> {
+    Optional<Rol> findByNombre(String nombre);
 }
