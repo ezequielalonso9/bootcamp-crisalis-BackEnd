@@ -1,5 +1,6 @@
 package com.crisalis.bootcamp.exceptions;
 
+import com.crisalis.bootcamp.exceptions.custom.ProductException;
 import com.crisalis.bootcamp.exceptions.custom.RolException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -14,13 +15,14 @@ import javax.validation.ValidationException;
 public class GlobalExceptionHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(
-          {ValidationException.class,
-          RolException.class}
-    )
+    @ExceptionHandler({
+            ValidationException.class,
+            RolException.class,
+            ProductException.class
+    })
     @ResponseBody
     public ErrorMessage handleValidationExceptions(HttpServletRequest request, Exception exception) {
-        return new ErrorMessage(exception,request.getRequestURI());
+        return new ErrorMessage(exception, request.getRequestURI());
     }
 
 }

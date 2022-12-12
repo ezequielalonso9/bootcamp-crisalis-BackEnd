@@ -1,9 +1,19 @@
-package com.crisalis.bootcamp.entities;
+package com.crisalis.bootcamp.model.entities;
+
+import lombok.*;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "tipo_producto")
 public class TipoProducto {
 
@@ -13,35 +23,16 @@ public class TipoProducto {
     @NotNull
     private String tipoProducto;
 
-    public TipoProducto() {
-    }
-
-    public TipoProducto(Long id, String tipoProducto) {
-        this.id = id;
-        this.tipoProducto = tipoProducto;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getTipoProducto() {
-        return tipoProducto;
-    }
-
-    public void setTipoProducto(String tipoProducto) {
-        this.tipoProducto = tipoProducto;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        TipoProducto that = (TipoProducto) o;
+        return id != null && Objects.equals(id, that.id);
     }
 
     @Override
-    public String toString() {
-        return "TipoProducto{" +
-                "id=" + id +
-                ", tipoProducto='" + tipoProducto + '\'' +
-                '}';
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

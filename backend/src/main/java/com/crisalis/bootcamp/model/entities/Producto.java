@@ -1,9 +1,19 @@
-package com.crisalis.bootcamp.entities;
+package com.crisalis.bootcamp.model.entities;
+
+import lombok.*;
+import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @Entity
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Producto {
 
     @Id
@@ -21,64 +31,16 @@ public class Producto {
     @NotNull
     private TipoProducto tipoProducto;
 
-    public Producto() {
-    }
-
-    public Producto(Long id, String nombre, Float costo, Float cargoAdicional, TipoProducto tipoProducto) {
-        this.id = id;
-        this.nombre = nombre;
-        this.costo = costo;
-        this.cargoAdicional = cargoAdicional;
-        this.tipoProducto = tipoProducto;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public Float getCosto() {
-        return costo;
-    }
-
-    public void setCosto(Float costo) {
-        this.costo = costo;
-    }
-
-    public Float getCargoAdicional() {
-        return cargoAdicional;
-    }
-
-    public void setCargoAdicional(Float cargoAdicional) {
-        this.cargoAdicional = cargoAdicional;
-    }
-
-    public TipoProducto getTipoProducto() {
-        return tipoProducto;
-    }
-
-    public void setTipoProducto(TipoProducto tipoProducto) {
-        this.tipoProducto = tipoProducto;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        Producto producto = (Producto) o;
+        return id != null && Objects.equals(id, producto.id);
     }
 
     @Override
-    public String toString() {
-        return "Producto{" +
-                "id=" + id +
-                ", nombre='" + nombre + '\'' +
-                ", costo=" + costo +
-                ", cargoAdicional=" + cargoAdicional +
-                '}';
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

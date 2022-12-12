@@ -1,4 +1,4 @@
-package com.crisalis.bootcamp.entities;
+package com.crisalis.bootcamp.model.entities;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
