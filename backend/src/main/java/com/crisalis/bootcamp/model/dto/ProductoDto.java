@@ -13,7 +13,7 @@ public class ProductoDto {
     private Long id;
     private String nombre;
     private Float costo;
-    private Float cargoAdicional;
+    private Float cargoAdicionalSoporte;
     private Long idTipoProducto;
 
     public Producto toProducto(){
@@ -22,7 +22,7 @@ public class ProductoDto {
                 .builder()
                 .nombre(this.nombre)
                 .costo(this.costo)
-                .cargoAdicional(this.cargoAdicional)
+                .cargoAdicionalSoporte(this.cargoAdicionalSoporte)
                 .tipoProducto(tipoProducto)
                 .build();
     }

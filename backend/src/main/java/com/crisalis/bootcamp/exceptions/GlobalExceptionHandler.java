@@ -1,6 +1,8 @@
 package com.crisalis.bootcamp.exceptions;
 
+import com.crisalis.bootcamp.exceptions.custom.ClienteNotFoundException;
 import com.crisalis.bootcamp.exceptions.custom.ProductException;
+import com.crisalis.bootcamp.exceptions.custom.ProductNotFoundException;
 import com.crisalis.bootcamp.exceptions.custom.RolException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,6 +24,15 @@ public class GlobalExceptionHandler {
     })
     @ResponseBody
     public ErrorMessage handleValidationExceptions(HttpServletRequest request, Exception exception) {
+        return new ErrorMessage(exception, request.getRequestURI());
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler({
+            ProductNotFoundException.class,
+    })
+    @ResponseBody
+    public ErrorMessage handleNotFoundExceptions(HttpServletRequest request, Exception exception) {
         return new ErrorMessage(exception, request.getRequestURI());
     }
 

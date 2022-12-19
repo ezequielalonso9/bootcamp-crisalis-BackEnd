@@ -4,7 +4,6 @@ import lombok.*;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @Entity
@@ -20,8 +19,8 @@ public class TipoProducto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotNull
-    private String tipoProducto;
+    @Enumerated(value = EnumType.STRING)
+    private TipoProductoEnum tipoProducto;
 
     @Override
     public boolean equals(Object o) {

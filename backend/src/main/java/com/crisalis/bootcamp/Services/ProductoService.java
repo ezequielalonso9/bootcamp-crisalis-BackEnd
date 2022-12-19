@@ -9,8 +9,6 @@ import com.crisalis.bootcamp.repositories.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.validation.ValidationException;
-
 
 @Service
 public class ProductoService {
@@ -37,8 +35,7 @@ public class ProductoService {
                 .map( product -> {
                     product.setNombre( newProduct.getNombre() );
                     product.setCosto( newProduct.getCosto() );
-                    product.setCargoAdicional( newProduct.getCargoAdicional() );
-                    product.setCargoAdicional( newProduct.getCargoAdicional() );
+                    product.setCargoAdicionalSoporte( newProduct.getCargoAdicionalSoporte() );
                     product.setTipoProducto( tipoProductoUpdated );
                     return productoRepository.save(product);
                 }).orElseThrow(

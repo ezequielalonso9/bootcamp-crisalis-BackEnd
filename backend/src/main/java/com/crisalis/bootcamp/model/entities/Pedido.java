@@ -1,12 +1,10 @@
 package com.crisalis.bootcamp.model.entities;
 
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
-import javax.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 
@@ -14,35 +12,38 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Cliente {
-
+@Builder
+public class Pedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "persona_id", referencedColumnName = "id")
-    @NotNull
-    private Persona persona;
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "empresa_id", referencedColumnName = "id")
-    private Empresa empresa;
-
+    @Column(name = "fecha_pedido")
+    private Date fechaPedido;
+    @Column(name = "fehca_modificacion")
+    private Date fehcaUltimaModificacion;
+    @Column(name = "costo_total_pedido")
+    private Float costoTotalPedido;
     private Boolean estado;
 
-    @OneToMany(mappedBy = "cliente")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id")
     @ToString.Exclude
-    @JsonIgnore
-    private Set<Pedido> pedidos;
+    private Cliente cliente;
+
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    private Set<DetallePedido> detallePedido;
+
+
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Cliente cliente = (Cliente) o;
-        return id != null && Objects.equals(id, cliente.id);
+        Pedido pedido = (Pedido) o;
+        return id != null && Objects.equals(id, pedido.id);
     }
 
     @Override
