@@ -1,40 +1,47 @@
 package com.crisalis.bootcamp.model.entities;
 
 import com.crisalis.bootcamp.model.dto.PrestacionDto;
-import com.crisalis.bootcamp.model.dto.ProductoDto;
+import com.crisalis.bootcamp.model.dto.ServicioDto;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.Hibernate;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
-import javax.persistence.OneToMany;
 import java.util.Objects;
-import java.util.Set;
 
 @Entity
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 @AllArgsConstructor
-//@NoArgsConstructor
-//@SuperBuilder
-@DiscriminatorValue(value = "Producto")
-public class Producto extends Prestacion{
+@SuperBuilder
+@DiscriminatorValue(value = "Servicio")
+public class Servicio extends Prestacion{
+
+    private Float cargoAdicionalSoporte;
+
 
 //    @OneToMany(mappedBy = "prestacion")
 //    @ToString.Exclude
 //    private Set<DetallePedido> detallePedidos;
 
-    public Producto(ProductoDto productoDto){
-        super(productoDto.getNombre(),
-                productoDto.getCosto(),
-                productoDto.getDetalle(),
-                productoDto.getEstado());
+//    @Builder
+//    public Service(Long id, Float costo, String detalle, String nombre ,Float cargo_adicional_soporte) {
+//        super(id, costo, detalle, nombre);
+//        this.cargo_adicional_soporte = cargo_adicional_soporte;
+//    }
+    public Servicio(ServicioDto servicioDto){
+        super(servicioDto.getNombre(),
+                servicioDto.getCosto(),
+                servicioDto.getDetalle(),
+                servicioDto.getEstado());
+        this.cargoAdicionalSoporte = servicioDto.getCargoAdicionalSoporte();
     }
 
     public PrestacionDto toDto(){
-        return ProductoDto
+        return ServicioDto
                 .builder()
                 .tipoPrestacion(getClass().getSimpleName())
                 .id(getId())
@@ -42,6 +49,7 @@ public class Producto extends Prestacion{
                 .costo(getCosto())
                 .detalle(getDetalle())
                 .estado(getEstado())
+                .cargoAdicionalSoporte(getCargoAdicionalSoporte())
                 .impuestosId(getIdImpuestos())
                 .build();
     }
@@ -50,8 +58,8 @@ public class Producto extends Prestacion{
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        Producto producto = (Producto) o;
-        return getId() != null && Objects.equals(getId(), producto.getId());
+        Servicio servicio = (Servicio) o;
+        return getId() != null && Objects.equals(getId(), servicio.getId());
     }
 
     @Override

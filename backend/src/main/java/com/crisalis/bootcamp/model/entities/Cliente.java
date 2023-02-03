@@ -1,6 +1,7 @@
 package com.crisalis.bootcamp.model.entities;
 
 
+import com.crisalis.bootcamp.model.dto.ClienteDto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.hibernate.Hibernate;
@@ -23,11 +24,11 @@ public class Cliente {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "persona_id", referencedColumnName = "id")
+    @JoinColumn(name = "persona_dni", referencedColumnName = "dni")
     @NotNull
     private Persona persona;
     @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "empresa_id", referencedColumnName = "id")
+    @JoinColumn(name = "empresa_cuit", referencedColumnName = "cuit")
     private Empresa empresa;
 
     private Boolean estado;
@@ -36,6 +37,17 @@ public class Cliente {
     @ToString.Exclude
     @JsonIgnore
     private Set<Pedido> pedidos;
+
+
+    public Cliente( ClienteDto clienteDto){
+        this.persona = new Persona(clienteDto.getPersona());
+        if( clienteDto.getEmpresa() != null){
+            this.empresa = new Empresa(clienteDto.getEmpresa());
+        }else {
+            this.empresa = null;
+        }
+        this.estado = true;
+    }
 
     @Override
     public boolean equals(Object o) {

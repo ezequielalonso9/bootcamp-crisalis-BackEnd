@@ -1,33 +1,42 @@
 package com.crisalis.bootcamp.model.entities;
 
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.util.Objects;
 
-@Entity
 @Getter
 @Setter
 @ToString
-@NoArgsConstructor
-@AllArgsConstructor
+@Entity
 @Builder
-@Table(name = "tipo_producto")
-public class TipoProducto {
-
+@AllArgsConstructor
+@NoArgsConstructor
+public class DetalleLineaPedido {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Enumerated(value = EnumType.STRING)
-    private TipoProductoEnum tipoProducto;
+    private Long idImpuesto;
+    private Long idPedido;
+
+    private String nombreImpuesto;
+    private Float valorImpuesto;
+    private Float valorAdicional;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "linea_id")
+    @ToString.Exclude
+    private LineaPedido linea;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-        TipoProducto that = (TipoProducto) o;
-        return id != null && Objects.equals(id, that.id);
+        DetalleLineaPedido that = (DetalleLineaPedido) o;
+        return getId() != null && Objects.equals(getId(), that.getId());
     }
 
     @Override

@@ -1,6 +1,8 @@
 package com.crisalis.bootcamp.model.entities;
 
+import com.crisalis.bootcamp.model.dto.ImpuestoDto;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
@@ -11,9 +13,11 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
-@Builder
+//@Builder
+//@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
+//@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Impuesto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,9 +25,15 @@ public class Impuesto {
     private String nombreImpuesto;
     private Float valorImpuesto;
 
+
+    public Impuesto(ImpuestoDto impuestoDto){
+        this.nombreImpuesto = impuestoDto.getNombreImpuesto();
+        this.valorImpuesto = impuestoDto.getValorImpuesto();
+    }
+
     @ManyToMany(mappedBy = "impuestos")
-    @ToString.Exclude
-    private Set<DetallePedido> detalles;
+    Set<Prestacion> prestaciones;
+
 
     @Override
     public boolean equals(Object o) {

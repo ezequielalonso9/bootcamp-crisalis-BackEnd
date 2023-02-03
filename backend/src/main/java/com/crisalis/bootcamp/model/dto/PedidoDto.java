@@ -1,39 +1,37 @@
 package com.crisalis.bootcamp.model.dto;
 
-import com.crisalis.bootcamp.model.entities.Cliente;
 import com.crisalis.bootcamp.model.entities.Pedido;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import java.util.Date;
-import java.util.Set;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PedidoDto {
 
     private Long id;
     private Long idCliente;
-    private Set<DetallePedidoDto> detalles;
+    private String tipoCliente;
+    private Boolean estado;
+    private LineaPedidoDto linea;
+    private Float subTotalPedido;
+    private Float totalImpuestoIva;
+    private Float totalImpuestoIbb;
+    private Float totalOtrosImpuestos;
+    private Float descuentoTotal;
+    private Float totalPedido;
+
 
     public Pedido toPedido(){
-        Cliente cliente = Cliente
-                .builder()
-                .id(this.idCliente)
-                .build();
-
         return Pedido
                 .builder()
-                .id(this.id)
-//                .fechaPedido(this.fechaPedido)
-//                .fehcaUltimaModificacion(this.fehcaUltimaModificacion)
-//                .costoTotalPedido(this.costoTotalPedido)
-//                .estado(this.estado)
-                .cliente( cliente )
+                .estado(this.getEstado())
+                .fechaPedido(new Date())
                 .build();
     };
 

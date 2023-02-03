@@ -1,10 +1,12 @@
 package com.crisalis.bootcamp.model.entities;
 
+import com.crisalis.bootcamp.model.dto.PedidoDto;
 import lombok.*;
 import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -23,8 +25,13 @@ public class Pedido {
     private Date fechaPedido;
     @Column(name = "fehca_modificacion")
     private Date fehcaUltimaModificacion;
-    @Column(name = "costo_total_pedido")
-    private Float costoTotalPedido;
+    private Float subTotalPedido;
+    private Float totalImpuestoIva;
+    private Float totalImpuestoIbb;
+    private Float totalOtrosImpuestos;
+    private Float descuentoTotal;
+    private Float totalPedido;
+
     private Boolean estado;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -34,9 +41,43 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL)
     @ToString.Exclude
-    private Set<DetallePedido> detallePedido;
+    private Set<LineaPedido> lineasPedido = new HashSet<>();
 
 
+
+    public void addLineaPedido(LineaPedido lineaPedido) {
+        if( this.getLineasPedido() == null ){
+            this.lineasPedido = new HashSet<>();
+            this.lineasPedido.add(lineaPedido);
+        }else {
+            this.getLineasPedido().add(lineaPedido);
+        }
+    }
+
+    public String getTipoCliente(){
+        if(this.cliente.getEmpresa() == null ){
+            return "Persona";
+        }
+        return "Empresa";
+    }
+
+
+    public PedidoDto toDto(){
+
+        return PedidoDto
+                .builder()
+                .id(this.id)
+                .idCliente(this.cliente.getId())
+                .tipoCliente(this.getTipoCliente())
+                .estado(this.estado)
+                .subTotalPedido(this.subTotalPedido)
+                .totalImpuestoIva(this.totalImpuestoIva)
+                .totalImpuestoIbb(this.totalImpuestoIbb)
+                .totalOtrosImpuestos(this.totalOtrosImpuestos)
+                .descuentoTotal(this.descuentoTotal)
+                .totalPedido(this.totalPedido)
+                .build();
+    }
 
     @Override
     public boolean equals(Object o) {

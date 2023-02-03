@@ -3,11 +3,7 @@ package com.crisalis.bootcamp;
 import com.crisalis.bootcamp.Services.UserService;
 import com.crisalis.bootcamp.model.dto.UserDto;
 import com.crisalis.bootcamp.model.entities.Rol;
-import com.crisalis.bootcamp.model.entities.TipoProducto;
-import com.crisalis.bootcamp.model.entities.TipoProductoEnum;
-import com.crisalis.bootcamp.model.entities.User;
 import com.crisalis.bootcamp.repositories.RolRepository;
-import com.crisalis.bootcamp.repositories.TipoProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -23,8 +19,6 @@ public class DatabaseInitializer implements ApplicationListener<ContextRefreshed
     private UserService userService;
     @Autowired
     private RolRepository rolRepository;
-    @Autowired
-    private TipoProductoRepository tipoProductoRepository;
     @Override
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if (event.getApplicationContext().getParent() == null ) {

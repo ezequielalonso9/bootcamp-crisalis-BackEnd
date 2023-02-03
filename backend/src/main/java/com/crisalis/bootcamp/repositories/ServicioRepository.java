@@ -1,10 +1,9 @@
 package com.crisalis.bootcamp.repositories;
 
-import com.crisalis.bootcamp.model.entities.TipoProducto;
+import com.crisalis.bootcamp.model.entities.Servicio;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TipoProductoRepository extends JpaRepository<TipoProducto,Long> {
+public interface ServicioRepository extends JpaRepository<Servicio, Long> {
 }
-

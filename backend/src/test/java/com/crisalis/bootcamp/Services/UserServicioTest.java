@@ -27,7 +27,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class UserServiceTest {
+class UserServicioTest {
 
     @Autowired
     UserService userService;
@@ -132,7 +132,6 @@ class UserServiceTest {
      * userUpdate
      */
     @Test
-
     @Order(3)
     public void deleteUser(){
         Optional<User> userOptional = userRepository.findByUsername("user update");
