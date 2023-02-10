@@ -2,22 +2,20 @@ package com.crisalis.bootcamp.Services;
 
 import com.crisalis.bootcamp.exceptions.custom.ClienteNotFoundException;
 import com.crisalis.bootcamp.exceptions.custom.EmpresaException;
+import com.crisalis.bootcamp.exceptions.custom.PedidoException;
 import com.crisalis.bootcamp.exceptions.custom.PersonaException;
 import com.crisalis.bootcamp.model.dto.ClienteDto;
 import com.crisalis.bootcamp.model.dto.EmpresaDto;
 import com.crisalis.bootcamp.model.dto.PersonaDto;
-import com.crisalis.bootcamp.model.entities.Cliente;
-import com.crisalis.bootcamp.model.entities.Empresa;
-import com.crisalis.bootcamp.model.entities.Persona;
+import com.crisalis.bootcamp.model.entities.*;
 import com.crisalis.bootcamp.repositories.ClienteRepository;
+import com.crisalis.bootcamp.repositories.PedidoRepository;
 import com.crisalis.bootcamp.repositories.PersonaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ClienteService {
@@ -26,6 +24,11 @@ public class ClienteService {
     ClienteRepository clienteRepository;
     @Autowired
     PersonaRepository personaRepository;
+    @Autowired
+    ServicioClienteService servicioClienteService;
+
+    @Autowired
+    PedidoRepository pedidoRepository;
 
     public Cliente findClienteByDniPersona(Integer dni) {
         return clienteRepository.findByPersonaDni(dni)
@@ -64,24 +67,53 @@ public class ClienteService {
     }
 
 
-    public void deletePersona(Integer dni) {
+    public boolean deletePersona(Integer dni) {
 
-        Optional<Cliente> cliente = clienteRepository.findByPersonaDni(dni);
+        Optional<Cliente> clienteOpt = clienteRepository.findByPersonaDni(dni);
 
-        if (cliente.isEmpty()) {
+        if (clienteOpt.isEmpty()) {
             throw new ClienteNotFoundException("Persona con dni " + dni + "no existe");
         }
-        clienteRepository.delete(cliente.get());
+
+        return deleteCliente(clienteOpt.get());
+
     }
 
-    public void deleteEmpresa(Long cuit) {
+    public boolean deleteCliente(Cliente cliente){
 
-        Optional<Cliente> cliente = clienteRepository.findByEmpresaCuit(cuit);
+        boolean areThereServiceActive = servicioClienteService
+                .areThereServiceActivceByIdCliente(cliente.getId());
 
-        if (cliente.isEmpty()) {
+        boolean areTherePedido = areTherePedidoByClienteId(cliente.getId());
+
+        if ( !areTherePedido ){
+            clienteRepository.delete(cliente);
+            return true;
+        }
+
+        cliente.setEstado(false);
+        servicioClienteService.bajaServiciosByIdCliente(cliente.getId());
+        clienteRepository.save(cliente);
+        return false;
+
+    }
+
+    public boolean areTherePedidoByClienteId(Long idCliente){
+
+        List<Pedido> pedidos = pedidoRepository.findByClienteId(idCliente);
+
+        return pedidos.size() > 0;
+    }
+
+    public boolean deleteEmpresa(Long cuit) {
+
+        Optional<Cliente> clienteOpt = clienteRepository.findByEmpresaCuit(cuit);
+
+        if (clienteOpt.isEmpty()) {
             throw new ClienteNotFoundException("Empresa con cuit " + cuit + "no existe");
         }
-        clienteRepository.delete(cliente.get());
+
+        return deleteCliente(clienteOpt.get());
     }
 
 
@@ -179,32 +211,6 @@ public class ClienteService {
         return !Objects.equals(persona.getDni(), personaDto.getDni());
     }
 
-    public ClienteDto updateCliente(Cliente cliente, Cliente clienteNew) {
-
-        Persona persona = cliente.getPersona();
-        persona.update(clienteNew.getPersona());
-
-        Empresa empresa = null;
-
-        if (cliente.getEmpresa() != null) {
-            empresa = cliente.getEmpresa(); // empresa tiene id
-        }
-
-        if (clienteNew.getEmpresa() != null) {
-            //hay que actulizar la empresa
-            if (empresa == null) {  //si es verdadero el cliente no tenia empresa
-                empresa = clienteNew.getEmpresa(); // ahora le asignamos una empresa
-            }else { // si es falso entonces el cliente tenia empresa y la actualizamos, sin cambiar el cuit
-                empresa.update(clienteNew.getEmpresa());
-            }
-
-        }
-
-        cliente.setEmpresa(empresa);
-        cliente.setPersona(persona);
-        Cliente clienteUpdated = clienteRepository.save(cliente);
-        return new ClienteDto(clienteUpdated);
-    }
 
     public Persona validatePersona(PersonaDto persona) {
         if (persona == null) throw new PersonaException("Persona is required");
@@ -235,27 +241,6 @@ public class ClienteService {
 
     }
 
-    public Cliente validateCliente(ClienteDto clienteDto, Boolean isEmpresa) {
-
-        if (clienteDto.getPersona() == null) {
-            throw new PersonaException("Persona is required");
-        }
-        validatePersona(clienteDto.getPersona());
-
-        if (isEmpresa) {
-            if (clienteDto.getEmpresa() == null) {
-                throw new EmpresaException("Empresa is required");
-            }
-            validateEmpresa(clienteDto.getEmpresa());
-        } else {
-            if (clienteDto.getEmpresa() != null) {
-                validateEmpresa(clienteDto.getEmpresa());
-            }
-        }
-
-        return new Cliente(clienteDto);
-    }
-
     public void validateExistPersona(Integer dni) {
 
         boolean clientePersonaExist = clienteRepository.findByPersonaDni(dni).isPresent();
@@ -275,5 +260,38 @@ public class ClienteService {
         }
     }
 
+    public Cliente getClienteByTipoClienteAndIdCliente(String tipoCliente, Long idCliente){
 
+        if (Objects.equals(tipoCliente.toUpperCase(), TipoCliente.EMPRESA.name())) {
+            return  findClienteByCuitEmpresa(idCliente);
+        }
+
+        return findClienteByDniPersona(Math.toIntExact(idCliente));
+
+    }
+
+    public void validateTipoCliente(String tipoCliente) {
+        String upperTipoCliente = tipoCliente.toUpperCase();
+        TipoCliente[] tipoClientes = TipoCliente.values();
+        boolean isValidTipoCliente = false;
+
+        long validTipoCliente = Arrays.stream(tipoClientes).filter(
+                enumTipoCliente -> Objects.equals(enumTipoCliente.toString(), upperTipoCliente)).count();
+        if (validTipoCliente == 1L) {
+            isValidTipoCliente = true;
+        }
+
+        if (!isValidTipoCliente) {
+            throw new PedidoException("Tipo de cliente no valido");
+        }
+    }
+
+
+    public List<ClienteDto> findAllActivos() {
+        List<ClienteDto> clientes = findAll();
+        return clientes
+                .stream()
+                .filter(ClienteDto::getEstado)
+                .collect(Collectors.toList());
+    }
 }

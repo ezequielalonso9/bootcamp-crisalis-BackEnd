@@ -13,11 +13,8 @@ import java.util.Set;
 @Getter
 @Setter
 @ToString
-//@Builder
-//@SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-//@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Impuesto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +29,7 @@ public class Impuesto {
     }
 
     @ManyToMany(mappedBy = "impuestos")
+    @ToString.Exclude
     Set<Prestacion> prestaciones;
 
 

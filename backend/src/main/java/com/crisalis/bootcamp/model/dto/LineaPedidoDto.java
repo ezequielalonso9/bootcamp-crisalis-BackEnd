@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.Set;
 
 @Data
 @Builder
@@ -16,11 +17,17 @@ public class LineaPedidoDto {
     private String tipoPrestacion;
     private Integer cantidadPrestacion;
     private Float costoUnitarioPrestacion;
-    private Float costoSoporte;
+    private Float costoUnitarioGarantia;
+    private Float costoUnitarioSoporte;
+
+    private Float costoAdicionalGarantia;
+    private Float cargoAdicionalSoporte;
     private Integer añosGarantia;
     private Date fecha;
+    private Date fechaUltimaModificacion;
     private Float descuento;
-    private Float cosotoTotalLinea;
+    private Float costoTotalLinea;
+    private Set<DetalleLineaPedidoDto> impuestos;
 
     public LineaPedido toDetallePedido(){
         return LineaPedido

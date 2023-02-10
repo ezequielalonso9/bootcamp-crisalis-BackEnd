@@ -1,5 +1,6 @@
 package com.crisalis.bootcamp.model.entities;
 
+import com.crisalis.bootcamp.model.dto.DetalleLineaPedidoDto;
 import com.crisalis.bootcamp.model.dto.LineaPedidoDto;
 import lombok.*;
 import org.hibernate.Hibernate;
@@ -20,12 +21,16 @@ public class LineaPedido {
     private Long id;
     private String tipoPrestacion;
     private Float costoUnitarioPrestacion;
-    private Float costoSoporte;
+    private Float costoUnitarioSoporte;
+    private Float costoUnitarioGarantia;
 
     private Integer cantidadPrestacion;
+    private Float cargoAdicionalSoporte;
     private Integer yearsGarantia;
     private Float cargoAdicionalGarantia;
     private Date fechaLinea;
+    private Date fechaUltimaModificacion;
+
     private Float descuento;
     private Float costoLinea;
 
@@ -37,7 +42,7 @@ public class LineaPedido {
     private Set<DetalleLineaPedido> detalleImpuestos = new HashSet<>();
 
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pedido_id")
     @ToString.Exclude
     private Pedido pedido;
@@ -47,34 +52,51 @@ public class LineaPedido {
     @ToString.Exclude
     private Prestacion prestacion;
 
+    public void update(LineaPedidoDto lineaPedidoDto) {
+        this.cantidadPrestacion = lineaPedidoDto.getCantidadPrestacion();
+        if ( lineaPedidoDto.getAñosGarantia() != null ){
+            this.yearsGarantia = lineaPedidoDto.getAñosGarantia();
+        }
+    }
+
     public static class LineaPedidoBuilder{
         public LineaPedidoBuilder prestacion(Prestacion prestacion){
             this.prestacion= prestacion;
             this.costoUnitarioPrestacion = prestacion.getCosto();
             if(prestacion.getClass() == Servicio.class){
-                this.costoSoporte = ((Servicio) prestacion).getCargoAdicionalSoporte();
+                this.costoUnitarioSoporte = ((Servicio) prestacion).getCargoAdicionalSoporte();
             }else {
-                this.costoSoporte = null;
+                this.costoUnitarioSoporte = null;
             }
             return this;
         }
     }
 
     public LineaPedidoDto toDto(){
+        Set<DetalleLineaPedido> impuestosLinea = this.getDetalleImpuestos();
+        Set<DetalleLineaPedidoDto> detallesDto = new HashSet<>();
+
+        impuestosLinea.forEach( impuesto ->
+                detallesDto.add( new DetalleLineaPedidoDto(impuesto) ) );
+
         return LineaPedidoDto
                 .builder()
                 .id(this.id)
                 .idPrestacion(this.prestacion.getId())
                 .tipoPrestacion(this.getTipoPrestacion())
                 .nombrePrestacion(this.prestacion.getNombre())
-                .tipoPrestacion(this.prestacion.getClass().getSimpleName())
                 .cantidadPrestacion(this.cantidadPrestacion)
                 .costoUnitarioPrestacion(this.costoUnitarioPrestacion)
-                .costoSoporte(this.costoSoporte)
+                .costoUnitarioGarantia(this.costoUnitarioGarantia)
+                .costoUnitarioSoporte(this.costoUnitarioSoporte)
+                .cargoAdicionalSoporte(this.cargoAdicionalSoporte)
+                .costoAdicionalGarantia(this.cargoAdicionalGarantia)
                 .añosGarantia(this.yearsGarantia)
                 .fecha(this.fechaLinea)
+                .fechaUltimaModificacion(this.fechaUltimaModificacion)
                 .descuento(this.descuento)
-                .cosotoTotalLinea(this.costoLinea)
+                .costoTotalLinea(this.costoLinea)
+                .impuestos(detallesDto)
                 .build();
     }
 

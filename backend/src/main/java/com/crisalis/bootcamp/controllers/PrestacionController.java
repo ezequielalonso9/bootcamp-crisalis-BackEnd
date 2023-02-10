@@ -26,6 +26,13 @@ public class PrestacionController {
         return new ResponseEntity<>(prestaciones, HttpStatus.OK);
     }
 
+    @GetMapping("/prestaciones/activas")
+    public ResponseEntity<List<PrestacionDto>> findAllactivas(){
+        List<PrestacionDto> prestaciones = prestacionService.findAllActivas();
+
+        return new ResponseEntity<>(prestaciones, HttpStatus.OK);
+    }
+
     @GetMapping("/prestacion/{id}")
     public ResponseEntity<PrestacionDto> findPrestacionById(@PathVariable(value = "id") Long id){
 
@@ -73,8 +80,14 @@ public class PrestacionController {
     @DeleteMapping("/prestacion/{id}")
     public ResponseEntity<Object> deletePrestacion(@PathVariable(value = "id") Long id ){
 
+
         boolean isDelete = prestacionService.deletePrestacionById(id);
 
+        if (isDelete){
+            return new ResponseEntity<>(isDelete,HttpStatus.OK);
+        }
+
         return new ResponseEntity<>(isDelete,HttpStatus.NO_CONTENT);
+
     }
 }

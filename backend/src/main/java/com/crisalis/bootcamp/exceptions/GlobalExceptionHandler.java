@@ -46,7 +46,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             ClienteNotFoundException.class,
             ImpuestoException.class,
             PedidoException.class,
-            LineaPedidoException.class
+            LineaPedidoException.class,
+            ServicioClienteException.class
     })
     @ResponseBody
     public ErrorMessage handleValidationExceptions(HttpServletRequest request, Exception exception) {

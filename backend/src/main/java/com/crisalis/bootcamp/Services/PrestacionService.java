@@ -2,20 +2,21 @@ package com.crisalis.bootcamp.Services;
 
 import com.crisalis.bootcamp.exceptions.custom.PrestacionException;
 import com.crisalis.bootcamp.exceptions.custom.PrestacionNotFoundException;
+import com.crisalis.bootcamp.model.dto.ClienteDto;
 import com.crisalis.bootcamp.model.dto.PrestacionDto;
 import com.crisalis.bootcamp.model.dto.ProductoDto;
 import com.crisalis.bootcamp.model.dto.ServicioDto;
-import com.crisalis.bootcamp.model.entities.Impuesto;
-import com.crisalis.bootcamp.model.entities.Prestacion;
-import com.crisalis.bootcamp.model.entities.Producto;
-import com.crisalis.bootcamp.model.entities.Servicio;
+import com.crisalis.bootcamp.model.entities.*;
+import com.crisalis.bootcamp.repositories.LineaPedidoRepository;
 import com.crisalis.bootcamp.repositories.PrestacionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class PrestacionService {
@@ -23,6 +24,9 @@ public class PrestacionService {
     PrestacionRepository prestacionRepository;
     @Autowired
     ImpuestoService impuestoService;
+
+    @Autowired
+    LineaPedidoRepository lineaPedidoRepository;
 
 
     public List<PrestacionDto> findAll(){
@@ -114,12 +118,40 @@ public class PrestacionService {
     }*/
 
     public Boolean deletePrestacionById(Long id){
+
         if( id == null ){
             throw new PrestacionException("ProductId is required");
         }
-        prestacionRepository.deleteById(id);
-        return !prestacionRepository.existsById(id);
+
+        Prestacion prestacion = findPrestacionById(id);
+        Boolean estado = prestacion.getEstado();
+        boolean areTherePrestacionUsados = areTherePrestacionOnPedido(id);
+
+        if (!areTherePrestacionUsados){
+            prestacionRepository.deleteById(id);
+            return true;
+        }
+
+        prestacion.setEstado(false);
+        prestacionRepository.save(prestacion);
+
+        return false;
     }
+
+    public boolean areTherePrestacionOnPedido(Long idPrestacion){
+        List<LineaPedido> lineas = lineaPedidoRepository
+                .findByPrestacionId(idPrestacion);
+
+        List<LineaPedido> lineasConPrestacion = lineas.stream()
+                .filter(lineaPedido ->
+                        Objects.equals(
+                                lineaPedido.getPrestacion().getId(),
+                                idPrestacion))
+                .collect(Collectors.toList());
+        return lineasConPrestacion.size() > 0 ;
+    }
+
+
 
     public Prestacion findPrestacionById(Long id){
         if( id == null ){
@@ -149,4 +181,11 @@ public class PrestacionService {
     }
 
 
+    public List<PrestacionDto> findAllActivas() {
+        List<PrestacionDto> prestaciones = findAll();
+        return prestaciones
+                .stream()
+                .filter(PrestacionDto::getEstado)
+                .collect(Collectors.toList());
+    }
 }

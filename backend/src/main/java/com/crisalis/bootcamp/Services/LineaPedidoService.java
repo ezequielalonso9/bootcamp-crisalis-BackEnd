@@ -2,18 +2,16 @@ package com.crisalis.bootcamp.Services;
 
 import com.crisalis.bootcamp.exceptions.custom.LineaPedidoException;
 import com.crisalis.bootcamp.helper.CalculatorPedido;
-import com.crisalis.bootcamp.helper.CuentasPedido;
+import com.crisalis.bootcamp.helper.CuentasLinea;
 import com.crisalis.bootcamp.model.dto.LineaPedidoDto;
-import com.crisalis.bootcamp.model.entities.DetalleLineaPedido;
-import com.crisalis.bootcamp.model.entities.Impuesto;
-import com.crisalis.bootcamp.model.entities.LineaPedido;
-import com.crisalis.bootcamp.model.entities.Prestacion;
+import com.crisalis.bootcamp.model.entities.*;
 import com.crisalis.bootcamp.repositories.LineaPedidoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.SecondaryTable;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -21,6 +19,8 @@ public class LineaPedidoService {
 
     @Autowired
     PrestacionService prestacionService;
+    @Autowired
+    ServicioClienteService servicioClienteService;
 
     @Autowired
     CalculatorPedido calculator;
@@ -28,27 +28,21 @@ public class LineaPedidoService {
     private LineaPedidoRepository lineaPedidoRepository;
 
 
-    public LineaPedido createLineaPedido(LineaPedidoDto lineaPedidoDto){
+    public LineaPedido createLineaPedido(LineaPedidoDto lineaPedidoDto, Long idCliente) {
 
         validateLineaPedido(lineaPedidoDto);
 
         Prestacion prestacion = prestacionService
                 .findPrestacionById(lineaPedidoDto.getIdPrestacion());
 
-        Float adicionalGarantia = calculator.calculateAdicionalGarantia(lineaPedidoDto, prestacion);
-        Float adicionalSoporte = calculator.calculateAdicionalSoporte(prestacion);
-        float adicional = adicionalSoporte + adicionalGarantia;
-        Float totalLinea = calculator.calculateTotalLinea(
-                lineaPedidoDto.getCantidadPrestacion(),
-                prestacion.getCosto(),
-                adicional
-                );
+
+        CuentasLinea cuentasLinea = calculator.calculateLinea(prestacion, lineaPedidoDto);
 
         Set<DetalleLineaPedido> detallesLinea = new HashSet<>();
         Set<Impuesto> impuestos = prestacion.getImpuestos();
         for (Impuesto impuesto : impuestos) {
             Float valorImpuesto = impuesto.getValorImpuesto();
-            Float valorAdicional = valorImpuesto * totalLinea / 100;
+            Float valorAdicional = valorImpuesto * cuentasLinea.getCostoTotalLiena() / 100;
             detallesLinea.add(
                     DetalleLineaPedido
                             .builder()
@@ -60,39 +54,85 @@ public class LineaPedidoService {
             );
         }
 
+        Integer garantia;
+        String tipoPrestacion;
+
+        if (prestacion.getClass() == Servicio.class) {
+            garantia = null;
+            tipoPrestacion = "Servicio";
+        } else {
+            garantia = lineaPedidoDto.getAñosGarantia();
+            tipoPrestacion = "Producto";
+        }
+
+        Float descuentoLinea = 0F;
+        boolean haveDiscount = servicioClienteService.haveDiscountByIdCliente(idCliente);
+        boolean isProducto = Objects.equals(tipoPrestacion, "Producto");
+        if (haveDiscount && isProducto){
+            descuentoLinea = calculator.calculateDescuentoLinea(
+                    prestacion.getCosto(),
+                    lineaPedidoDto.getCantidadPrestacion());
+        }
 
 
         return LineaPedido
                 .builder()
                 .prestacion(prestacion)
-                .tipoPrestacion(prestacion.getClass().getSimpleName())
-                .cargoAdicionalGarantia(adicionalGarantia)
+                .tipoPrestacion(tipoPrestacion)
+                .costoUnitarioGarantia(cuentasLinea.getCostoUnitarioGarantia())
+                .costoUnitarioSoporte(cuentasLinea.getCostoUnitarioSoporte())
+                .cargoAdicionalGarantia(cuentasLinea.getTotalAdicionalGarantia())
+                .cargoAdicionalSoporte(cuentasLinea.getTotalAdicionalSoporte())
                 .cantidadPrestacion(lineaPedidoDto.getCantidadPrestacion())
-                .yearsGarantia(lineaPedidoDto.getAñosGarantia())
+                .yearsGarantia(garantia)
                 .fechaLinea(lineaPedidoDto.getFecha())
-                .costoLinea(totalLinea)
+                .costoLinea(cuentasLinea.getCostoTotalLiena())
                 .detalleImpuestos(detallesLinea)
-                .descuento(0f)//calcular descuento
+                .descuento(descuentoLinea)
                 .build();
     }
 
-    public LineaPedido save(LineaPedido lineaPedido){
+    public LineaPedido save(LineaPedido lineaPedido) {
         return lineaPedidoRepository.save(lineaPedido);
     }
 
-    public void validateLineaPedido(LineaPedidoDto lineaPedidoDto){
+    public void validateLineaPedido(LineaPedidoDto lineaPedidoDto) {
 
-        if( lineaPedidoDto.getIdPrestacion() == null ){
+        if (lineaPedidoDto.getIdPrestacion() == null) {
             throw new LineaPedidoException("Id prestacion es requerido");
         }
 
-        if( lineaPedidoDto.getCantidadPrestacion() == null ){
+        if (lineaPedidoDto.getCantidadPrestacion() == null) {
             throw new LineaPedidoException("Cantidad de prestacion es requerida");
         }
 
-        if( lineaPedidoDto.getCantidadPrestacion() <= 0 ){
+        if (lineaPedidoDto.getCantidadPrestacion() <= 0) {
             throw new LineaPedidoException("Cantidad de prestacion tiene que ser mayor a 0");
         }
     }
 
+    public LineaPedido findById(Long id) {
+
+        if (id == null) {
+            throw new LineaPedidoException("Id es requerido");
+        }
+
+        return lineaPedidoRepository.findById(id)
+                .orElseThrow(
+                        () -> new LineaPedidoException("Linea con Id: " +
+                                id + " no se cuentra.")
+                );
+    }
+
+    public void deleteById(Long lineaId) {
+        LineaPedido lineaPedido = findById(lineaId);
+        lineaPedidoRepository.delete(lineaPedido);
+    }
+
+    public List<LineaPedido> findServiciosByIdPedido(Long idPedido) {
+
+        return lineaPedidoRepository.findByPedidoIdAndTipoPrestacion(
+                idPedido,
+                "Servicio");
+    }
 }

@@ -24,6 +24,14 @@ public class ClienteController {
         return new ResponseEntity<>(clientes, HttpStatus.OK);
     }
 
+    @GetMapping("/clientes/activos")
+    public ResponseEntity<List<ClienteDto>> findAllActivos(){
+
+        List<ClienteDto> clientes = clienteService.findAllActivos();
+
+        return new ResponseEntity<>(clientes, HttpStatus.OK);
+    }
+
     @GetMapping("/cliente/persona/{dni}")
     public ResponseEntity<ClienteDto> findPersonaByDni(@PathVariable(value = "dni") Integer dni){
 
@@ -78,13 +86,19 @@ public class ClienteController {
 
     @DeleteMapping("/cliente/persona/{dni}")
     public ResponseEntity<Object> deletePersona(@PathVariable(value = "dni") Integer dni ){
-        clienteService.deletePersona(dni);
-        return new ResponseEntity<>(HttpStatus.OK);
+        boolean isDelete = clienteService.deletePersona(dni);
+        if (isDelete){
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @DeleteMapping("/cliente/empresa/{cuit}")
     public ResponseEntity<Object> deleteEmpresa(@PathVariable(value = "cuit") Long cuit ){
-        clienteService.deleteEmpresa(cuit);
-        return new ResponseEntity<>(HttpStatus.OK);
+        boolean isDelete = clienteService.deleteEmpresa(cuit);
+        if (isDelete){
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

@@ -1,5 +1,8 @@
 package com.crisalis.bootcamp.model.entities;
 
+import com.crisalis.bootcamp.helper.CuentasPedido;
+import com.crisalis.bootcamp.model.dto.ClienteDto;
+import com.crisalis.bootcamp.model.dto.LineaPedidoDto;
 import com.crisalis.bootcamp.model.dto.PedidoDto;
 import lombok.*;
 import org.hibernate.Hibernate;
@@ -64,11 +67,22 @@ public class Pedido {
 
     public PedidoDto toDto(){
 
+        Set<LineaPedido> lineas = this.getLineasPedido();
+        Set< LineaPedidoDto> lineasDto = new HashSet<>();
+        if ( lineas.size() > 0 ) {
+            lineas.forEach( linea -> {
+                lineasDto.add( linea.toDto() );
+            });
+        }
+
         return PedidoDto
                 .builder()
                 .id(this.id)
                 .idCliente(this.cliente.getId())
                 .tipoCliente(this.getTipoCliente())
+                .lineas(lineasDto)
+                .fechaPedido(this.fechaPedido)
+                .fechaUltimaModificacion(this.fehcaUltimaModificacion)
                 .estado(this.estado)
                 .subTotalPedido(this.subTotalPedido)
                 .totalImpuestoIva(this.totalImpuestoIva)
@@ -76,7 +90,18 @@ public class Pedido {
                 .totalOtrosImpuestos(this.totalOtrosImpuestos)
                 .descuentoTotal(this.descuentoTotal)
                 .totalPedido(this.totalPedido)
+                .cliente(new ClienteDto(this.cliente))
                 .build();
+    }
+
+    public void setMontosPedido(CuentasPedido cuentas){
+        this.setSubTotalPedido(cuentas.getSubTotal());
+        this.setTotalImpuestoIva(cuentas.getImpuestosIva());
+        this.setTotalImpuestoIbb(cuentas.getImpuestosIbb());
+        this.setTotalOtrosImpuestos(cuentas.getOtrosImpuestos());
+        this.setDescuentoTotal(cuentas.getDescuentos());
+        this.setTotalPedido(cuentas.getTotalPedido());
+
     }
 
     @Override

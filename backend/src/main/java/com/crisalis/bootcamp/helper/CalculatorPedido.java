@@ -54,8 +54,14 @@ public class CalculatorPedido {
         float totalIbb = resumenPedido.getImpuestosIbb();
         float totalOtrosImpuestos = resumenPedido.getOtrosImpuestos();
         float totalImpuestos = totalIbb + totalIva + totalOtrosImpuestos;
-        float totalDescueto = resumenPedido.getDescuentos(); //despues se calcula con todos los descuentos
-        Float totalPedido = costoLinea + totalImpuestos - totalDescueto;
+
+        float totalDescuento = lineaPedido.getDescuento();
+        if (totalDescuento > 2500 ){
+            totalDescuento = 2500;
+        }
+        resumenPedido.setDescuentos(totalDescuento);
+
+        Float totalPedido = costoLinea + totalImpuestos - totalDescuento;
         resumenPedido.setTotalPedido(totalPedido);
 
         return resumenPedido;
@@ -70,9 +76,9 @@ public class CalculatorPedido {
         float totalIbb = calculateImpuestoIbbByIdPedido(idPedido);
         float totalOtrosImpuestos = calculateOtherImpuestoByIdPedido(idPedido);
         float totalImpuestos = totalIbb + totalIva + totalOtrosImpuestos;
-        float totalDescueto = calculateTotalDescuentoByPedido(pedido);
+        float totalDescuento = calculateTotalDescuentoByPedido(pedido);
         float subTotal = calculateSubTotalPedidoByPedido(pedido);
-        Float totalPedido = subTotal + totalImpuestos - totalDescueto;
+        Float totalPedido = subTotal + totalImpuestos - totalDescuento;
 
 
         return CuentasPedido
@@ -80,7 +86,7 @@ public class CalculatorPedido {
                 .impuestosIva(totalIva)
                 .impuestosIbb(totalIbb)
                 .otrosImpuestos(totalOtrosImpuestos)
-                .descuentos(totalDescueto)
+                .descuentos(totalDescuento)
                 .subTotal(subTotal)
                 .totalPedido(totalPedido)
                 .build();
@@ -112,7 +118,6 @@ public class CalculatorPedido {
         if (impuestoIva.isPresent()) {
             List<DetalleLineaPedido> impuestosIvaOfIdPedido = detalleLineaPedidoRepository
                     .findByIdPedidoAndIdImpuesto(idPedido, impuestoIva.get().getId());
-            //calcular costoImpuestoIva
             impuestosIvaOfIdPedido.forEach(detalle -> {
                 Float valorAdicionalIva = detalle.getValorAdicional();
                 costoImpuestoIva.updateAndGet(v -> v + valorAdicionalIva);
@@ -146,22 +151,24 @@ public class CalculatorPedido {
         AtomicReference<Float> costoOtrosImpuestos = new AtomicReference<>(0F);
 
 
-        Optional<Impuesto> otrosImpuestos = impuestoRepository.findByNombreImpuestoIgnoreCase("IBB");
+        Optional<Impuesto> impuestoIbb = impuestoRepository.findByNombreImpuestoIgnoreCase("IBB");
+        Optional<Impuesto> impuestoIva = impuestoRepository.findByNombreImpuestoIgnoreCase("IVA");
 
-        if (otrosImpuestos.isPresent()) {
-            List<DetalleLineaPedido> impuestosIbbOfIdPedido = detalleLineaPedidoRepository
-                    .findByIdPedidoAndIdImpuesto(idPedido, otrosImpuestos.get().getId());
-            //calcular costoOtrosImpuestos
-            impuestosIbbOfIdPedido.forEach(detalle -> {
-                Float valorAdicionalOtrosImpuestos = detalle.getValorAdicional();
-                costoOtrosImpuestos.updateAndGet(v -> v + valorAdicionalOtrosImpuestos);
-            });
+        List<DetalleLineaPedido> othersImpuesto = detalleLineaPedidoRepository
+                .findByIdPedidoAndIdImpuestoNotAndIdImpuestoNot(
+                        idPedido,
+                        impuestoIva.get().getId(),
+                        impuestoIbb.get().getId());
 
-        }
+        othersImpuesto.forEach(detalle -> {
+            Float valorAdicionalOtrosImpuestos = detalle.getValorAdicional();
+            costoOtrosImpuestos.updateAndGet(v -> v + valorAdicionalOtrosImpuestos);
+        });
+
         return costoOtrosImpuestos.get();
     }
 
-    public Float calculateAdicionalGarantia(LineaPedidoDto lineaPedidoDto,
+    public float calculateAdicionalGarantia(LineaPedidoDto lineaPedidoDto,
                                             Prestacion prestacion) {
         float adicionalGarantia = 0F;
         Integer añosGarantia = lineaPedidoDto.getAñosGarantia();
@@ -174,15 +181,13 @@ public class CalculatorPedido {
         return adicionalGarantia;
     }
 
-    public Float calculateAdicionalSoporte(Prestacion prestacion) {
+    public float calculateAdicionalSoporte(Servicio prestacion) {
 
         float adicionalSoporte = 0F;
 
-        if (prestacion.getClass() == Servicio.class) {
-            Float cargoAdicionalSoporte = ((Servicio) prestacion).getCargoAdicionalSoporte();
-            if (cargoAdicionalSoporte != null) {
-                adicionalSoporte += cargoAdicionalSoporte;
-            }
+        Float cargoAdicionalSoporte = prestacion.getCargoAdicionalSoporte();
+        if (cargoAdicionalSoporte != null) {
+            adicionalSoporte += cargoAdicionalSoporte;
         }
 
         return adicionalSoporte;
@@ -207,5 +212,44 @@ public class CalculatorPedido {
         return totalDescuento.get();
     }
 
+    public CuentasLinea calculateLinea(Prestacion prestacion, LineaPedidoDto lineaPedidoDto) {
 
+
+        Integer cantidadPrestacion = lineaPedidoDto.getCantidadPrestacion();
+        float adicionalSoporte = 0, adicionalGarantia = 0;
+        float totalAdicionalSoporte = 0, totalAdicionalGarantia = 0;
+
+
+        if (prestacion.getClass() == Servicio.class) {
+            adicionalSoporte = calculateAdicionalSoporte((Servicio) prestacion);
+            totalAdicionalSoporte = adicionalSoporte * cantidadPrestacion;
+
+        } else {
+            adicionalGarantia = calculateAdicionalGarantia(lineaPedidoDto, prestacion);
+            totalAdicionalGarantia = adicionalGarantia * cantidadPrestacion;
+        }
+
+        float adicional = totalAdicionalSoporte + totalAdicionalGarantia;
+        Float totalLinea = calculateTotalLinea(
+                cantidadPrestacion,
+                prestacion.getCosto(),
+                adicional
+        );
+
+        return CuentasLinea
+                .builder()
+                .costoUnitarioSoporte(adicionalSoporte)
+                .costoUnitarioGarantia(adicionalGarantia)
+                .totalAdicionalSoporte(totalAdicionalSoporte)
+                .totalAdicionalGarantia(totalAdicionalGarantia)
+                .costoTotalLiena(totalLinea)
+                .build();
+    }
+
+
+    public Float calculateDescuentoLinea(float costoProducto, float cantidad) {
+
+        float descuento = 0.10F;
+        return descuento * costoProducto * cantidad;
+    }
 }
